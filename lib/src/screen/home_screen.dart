@@ -47,10 +47,23 @@ class _BookTableState extends State<BookTable> {
         if (!snapshot.hasData) return Container();
 
         var books = snapshot.requireData;
-        if (isAscending) {
-          books.sort((a, b) => a.title.compareTo(b.title));
-        } else {
-          books.sort((a, b) => b.title.compareTo(a.title));
+        switch (sortColumnIndex) {
+          case 0:
+            if (isAscending) {
+              books.sort((a, b) => a.title.compareTo(b.title));
+            } else {
+              books.sort((a, b) => b.title.compareTo(a.title));
+            }
+            break;
+
+          case 1:
+            if (isAscending) {
+              books.sort((a, b) => a.authorName.compareTo(b.authorName));
+            } else {
+              books.sort((a, b) => b.authorName.compareTo(a.authorName));
+            }
+            break;
+          default:
         }
 
         return DataTable2(
@@ -66,7 +79,15 @@ class _BookTableState extends State<BookTable> {
                   });
                 },
               ),
-              DataColumn(label: Text("Author"))
+              DataColumn(
+                label: Text("Author"),
+                onSort: (columnIndex, ascending) {
+                  setState(() {
+                    sortColumnIndex = columnIndex;
+                    isAscending = ascending;
+                  });
+                },
+              )
               // TODO: refactor to use generate on list
             ],
             rows: createRows(books));
