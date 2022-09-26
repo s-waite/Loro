@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:loro/src/dao/book_dao.dart';
 import 'package:loro/src/database/database.dart';
 import 'package:loro/src/entity/book.dart';
+import 'package:data_table_2/data_table_2.dart';
 import 'package:loro/src/widget/toolbar.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -34,21 +35,41 @@ class BookTable extends StatefulWidget {
 }
 
 class _BookTableState extends State<BookTable> {
+  int? sortColumnIndex;
+  bool isAscending = false;
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-    scrollDirection: Axis.vertical,
+    return Container(
         child: StreamBuilder(
       stream: widget.bookDAO.getAllBooks(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return Container();
 
-        final books = snapshot.requireData;
+        var books = snapshot.requireData;
+        if (isAscending) {
+          books.sort((a, b) => a.title.compareTo(b.title));
+        } else {
+          books.sort((a, b) => b.title.compareTo(a.title));
+        }
 
-        return DataTable(columns: [
-          DataColumn(label: Text("Title")),
-          DataColumn(label: Text("Author"))
-        ], rows: createRows(books));
+        return DataTable2(
+            sortColumnIndex: sortColumnIndex,
+            sortAscending: isAscending,
+            columns: [
+              DataColumn(
+                label: Text("Title"),
+                onSort: (columnIndex, ascending) {
+                  setState(() {
+                    sortColumnIndex = columnIndex;
+                    isAscending = ascending;
+                  });
+                },
+              ),
+              DataColumn(label: Text("Author"))
+              // TODO: refactor to use generate on list
+            ],
+            rows: createRows(books));
       },
     ));
   }
