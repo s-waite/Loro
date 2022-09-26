@@ -18,11 +18,51 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        // home: BookList(bookDAO: widget.bookDAO),
-        home: Scaffold(
-      body: Toolbar(),
+      home: BookTable(bookDAO: widget.bookDAO),
+      //   home: Scaffold(
+      // body: BookList(bookDAO: widget.bookDAO)
+    );
+  }
+}
+
+class BookTable extends StatefulWidget {
+  final BookDAO bookDAO;
+  const BookTable({super.key, required this.bookDAO});
+
+  @override
+  State<BookTable> createState() => _BookTableState();
+}
+
+class _BookTableState extends State<BookTable> {
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+    scrollDirection: Axis.vertical,
+        child: StreamBuilder(
+      stream: widget.bookDAO.getAllBooks(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return Container();
+
+        final books = snapshot.requireData;
+
+        return DataTable(columns: [
+          DataColumn(label: Text("Title")),
+          DataColumn(label: Text("Author"))
+        ], rows: createRows(books));
+      },
     ));
   }
+}
+
+List<DataRow> createRows(List<Book> books) {
+  List<DataRow> rows = [];
+  for (Book b in books) {
+    rows.add(DataRow(cells: [
+      DataCell(Text(b.title)),
+      DataCell(Text(b.authorName)),
+    ]));
+  }
+  return rows;
 }
 
 class BookList extends StatefulWidget {

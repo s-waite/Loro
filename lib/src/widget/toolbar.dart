@@ -18,7 +18,7 @@ class _ToolbarState extends State<Toolbar> {
         child: SizedBox(
             height: 100,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [Leading(), Trailing()],
             )));
@@ -49,7 +49,7 @@ class Trailing extends StatefulWidget {
 class _TrailingState extends State<Trailing> {
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Column(children: [SearchField()], mainAxisAlignment: MainAxisAlignment.center,);
   }
 }
 
