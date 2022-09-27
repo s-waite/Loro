@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loro/src/dao/book_dao.dart';
@@ -33,8 +31,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
 class BookTable extends StatefulWidget {
   final BookDAO bookDAO;
-  WidgetRef ref;
-  BookTable({super.key, required this.bookDAO, required this.ref});
+  final WidgetRef ref;
+  const BookTable({super.key, required this.bookDAO, required this.ref});
 
   @override
   State<BookTable> createState() => _BookTableState();
@@ -51,9 +49,8 @@ class _BookTableState extends State<BookTable> {
       stream: widget.bookDAO.getAllBooks(),
       builder: (context, snapshot) {
         // Show loading icon when table is loading
-        if (!snapshot.hasData ||
-            snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+        if (!snapshot.hasData)  {
+          return const Center(child: CircularProgressIndicator());
         }
 
         // Get the current books list
@@ -66,9 +63,9 @@ class _BookTableState extends State<BookTable> {
           books = books
               .where((element) => element.title.contains(searchText))
               .toList();
-          // If no items found print info 
+          // If no items found print info
           if (books.isEmpty) {
-            return Center(child: Text("No Results Found"));
+            return const Center(child: Text("No Results Found"));
           }
         }
 
@@ -116,66 +113,14 @@ class _BookTableState extends State<BookTable> {
                   });
                 },
               )
-              // TODO: refactor to use generate on list
             ],
-            rows: createRows(books));
+            rows: List<DataRow>.generate(books.length, (index) {
+              return DataRow(cells: [
+                DataCell(Text(books[index].title)),
+                DataCell(Text(books[index].authorName)),
+              ]);
+            }));
       },
     ));
-  }
-}
-
-List<DataRow> createRows(List<Book> books) {
-  print("create rows start");
-  List<DataRow> rows = [];
-  for (Book b in books) {
-    rows.add(DataRow(cells: [
-      DataCell(Text(b.title)),
-      DataCell(Text(b.authorName)),
-    ]));
-  }
-  print("returning rows");
-  return rows;
-}
-
-class BookList extends StatefulWidget {
-  final BookDAO bookDAO;
-  const BookList({super.key, required this.bookDAO});
-
-  @override
-  State<BookList> createState() => _BookListState();
-}
-
-class _BookListState extends State<BookList> {
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-        child: StreamBuilder(
-            stream: widget.bookDAO.getAllBooks(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return Container();
-
-              final books = snapshot.requireData;
-
-              return ListView.builder(
-                itemCount: books.length,
-                itemBuilder: (_, index) {
-                  return BookListCell(
-                    book: books[index],
-                    bookDAO: widget.bookDAO,
-                  );
-                },
-              );
-            }));
-  }
-}
-
-class BookListCell extends StatelessWidget {
-  final BookDAO bookDAO;
-  final Book book;
-  const BookListCell({super.key, required this.bookDAO, required this.book});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(title: Text(book.title));
   }
 }
