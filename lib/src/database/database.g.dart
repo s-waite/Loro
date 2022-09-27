@@ -124,15 +124,13 @@ class _$BookDAO extends BookDAO {
   final InsertionAdapter<Book> _bookInsertionAdapter;
 
   @override
-  Stream<List<Book>> getAllBooks() {
-    return _queryAdapter.queryListStream('SELECT * FROM Book',
+  Future<List<Book>> getAllBooks() async {
+    return _queryAdapter.queryList('SELECT * FROM Book',
         mapper: (Map<String, Object?> row) => Book(
             row['id'] as int,
             row['title'] as String,
             row['authorName'] as String,
-            row['isbn'] as int),
-        queryableName: 'Book',
-        isView: false);
+            row['isbn'] as int));
   }
 
   @override
