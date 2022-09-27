@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:riverpod/riverpod.dart';
+
+final searchTextStateProvider = StateProvider<String>((ref) {
+  print("setting hits");
+  return "";
+});
 
 class Toolbar extends StatefulWidget {
   const Toolbar({super.key});
@@ -49,27 +56,33 @@ class Trailing extends StatefulWidget {
 class _TrailingState extends State<Trailing> {
   @override
   Widget build(BuildContext context) {
-    return Column(children: [SearchField()], mainAxisAlignment: MainAxisAlignment.center,);
+    return Column(
+      children: [SearchField()],
+      mainAxisAlignment: MainAxisAlignment.center,
+    );
   }
 }
 
-class SearchField extends StatefulWidget {
+class SearchField extends ConsumerStatefulWidget {
   const SearchField({super.key});
 
   @override
-  State<SearchField> createState() => _SearchFieldState();
+  ConsumerState<SearchField> createState() => _SearchFieldState();
 }
 
-class _SearchFieldState extends State<SearchField> {
+class _SearchFieldState extends ConsumerState<SearchField> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
         width: 200,
         child: TextField(
+            onSubmitted: (value) {
+              print("On submitted called");
+              ref.read(searchTextStateProvider.notifier).state = value;
+            },
             decoration: InputDecoration(
-            border: OutlineInputBorder(),
-          hintText: "Search",
-          prefixIcon: Icon(Icons.search)
-        )));
+                border: OutlineInputBorder(),
+                hintText: "Search",
+                prefixIcon: Icon(Icons.search))));
   }
 }

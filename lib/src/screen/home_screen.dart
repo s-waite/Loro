@@ -1,34 +1,40 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loro/src/dao/book_dao.dart';
 import 'package:loro/src/database/database.dart';
 import 'package:loro/src/entity/book.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:loro/src/widget/toolbar.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   BookDAO bookDAO;
   HomeScreen({super.key, required this.bookDAO});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: BookTable(bookDAO: widget.bookDAO),
-      //   home: Scaffold(
-      // body: BookList(bookDAO: widget.bookDAO)
-    );
+        home: Scaffold(
+            body: Column(children: [
+      Toolbar(),
+      BookTable(bookDAO: widget.bookDAO, ref: ref),
+    ])
+            //   home: Scaffold(
+            // body: BookList(bookDAO: widget.bookDAO)
+            ));
   }
 }
 
 class BookTable extends StatefulWidget {
   final BookDAO bookDAO;
-  const BookTable({super.key, required this.bookDAO});
+  WidgetRef ref;
+  BookTable({super.key, required this.bookDAO, required this.ref});
 
   @override
   State<BookTable> createState() => _BookTableState();
@@ -40,14 +46,35 @@ class _BookTableState extends State<BookTable> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Expanded(
         child: StreamBuilder(
       stream: widget.bookDAO.getAllBooks(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return Container();
+        // Show loading icon when table is loading
+        if (!snapshot.hasData ||
+            snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
 
+        // Get the current books list
         var books = snapshot.requireData;
+
+        // Watch for the search text changing
+        String searchText = widget.ref.watch(searchTextStateProvider);
+        // Filter the book list for the text
+        if (searchText.isNotEmpty) {
+          books = books
+              .where((element) => element.title.contains(searchText))
+              .toList();
+          // If no items found print info 
+          if (books.isEmpty) {
+            return Center(child: Text("No Results Found"));
+          }
+        }
+
+        // Sorting logic for each column
         switch (sortColumnIndex) {
+          // Title column
           case 0:
             if (isAscending) {
               books.sort((a, b) => a.title.compareTo(b.title));
@@ -56,6 +83,7 @@ class _BookTableState extends State<BookTable> {
             }
             break;
 
+          // Author column
           case 1:
             if (isAscending) {
               books.sort((a, b) => a.authorName.compareTo(b.authorName));
@@ -97,6 +125,7 @@ class _BookTableState extends State<BookTable> {
 }
 
 List<DataRow> createRows(List<Book> books) {
+  print("create rows start");
   List<DataRow> rows = [];
   for (Book b in books) {
     rows.add(DataRow(cells: [
@@ -104,6 +133,7 @@ List<DataRow> createRows(List<Book> books) {
       DataCell(Text(b.authorName)),
     ]));
   }
+  print("returning rows");
   return rows;
 }
 
