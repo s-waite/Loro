@@ -28,6 +28,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print("building main");
     return MaterialApp(
         home: Scaffold(
             body: Column(children: [
@@ -67,6 +68,7 @@ class _BookTableState extends State<BookTable> {
   Widget build(BuildContext context) {
     // Search filtering logic
     // Widget will be rebuilt when search text changes
+    // TODO: try filtering with database query instead
     String searchText = widget.ref.watch(searchTextStateProvider);
     if (searchText.isNotEmpty) {
       books = widget.allBooks

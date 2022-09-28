@@ -8,6 +8,10 @@ import 'package:loro/src/entity/book.dart';
 import 'package:flutter/rendering.dart' show debugPaintSizeEnabled;
 import 'package:english_words/english_words.dart';
 
+final myProvider = Provider((ref) {
+  return $FloorAppDatabase.databaseBuilder('app_database.db').build();
+});
+
 Future<void> main() async {
   debugPaintSizeEnabled = false;
   WidgetsFlutterBinding.ensureInitialized();

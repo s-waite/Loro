@@ -85,7 +85,7 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Book` (`id` INTEGER NOT NULL, `title` TEXT NOT NULL, `authorName` TEXT NOT NULL, `isbn` INTEGER NOT NULL, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `Book` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `authorName` TEXT NOT NULL, `path` TEXT NOT NULL)');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -103,7 +103,7 @@ class _$BookDAO extends BookDAO {
   _$BookDAO(
     this.database,
     this.changeListener,
-  )   : _queryAdapter = QueryAdapter(database, changeListener),
+  )   : _queryAdapter = QueryAdapter(database),
         _bookInsertionAdapter = InsertionAdapter(
             database,
             'Book',
@@ -111,9 +111,8 @@ class _$BookDAO extends BookDAO {
                   'id': item.id,
                   'title': item.title,
                   'authorName': item.authorName,
-                  'isbn': item.isbn
-                },
-            changeListener);
+                  'path': item.path
+                });
 
   final sqflite.DatabaseExecutor database;
 
@@ -127,23 +126,19 @@ class _$BookDAO extends BookDAO {
   Future<List<Book>> getAllBooks() async {
     return _queryAdapter.queryList('SELECT * FROM Book',
         mapper: (Map<String, Object?> row) => Book(
-            row['id'] as int,
-            row['title'] as String,
-            row['authorName'] as String,
-            row['isbn'] as int));
+            title: row['title'] as String,
+            authorName: row['authorName'] as String,
+            path: row['path'] as String));
   }
 
   @override
-  Stream<Book?> findBookById(int id) {
-    return _queryAdapter.queryStream('SELECT * FROM Book WHERE id = ?1',
+  Future<Book?> findBookById(int id) async {
+    return _queryAdapter.query('SELECT * FROM Book WHERE id = ?1',
         mapper: (Map<String, Object?> row) => Book(
-            row['id'] as int,
-            row['title'] as String,
-            row['authorName'] as String,
-            row['isbn'] as int),
-        arguments: [id],
-        queryableName: 'Book',
-        isView: false);
+            title: row['title'] as String,
+            authorName: row['authorName'] as String,
+            path: row['path'] as String),
+        arguments: [id]);
   }
 
   @override
