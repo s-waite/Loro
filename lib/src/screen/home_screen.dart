@@ -7,7 +7,7 @@ import 'package:data_table_2/data_table_2.dart';
 import 'package:loro/src/widget/toolbar.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
-  List<Book> books = [];
+  ValueNotifier<List<Book>> bookNotifier = ValueNotifier<List<Book>>([]);
   BookDAO bookDAO;
   HomeScreen({super.key, required this.bookDAO});
 
@@ -20,7 +20,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     widget.bookDAO.getAllBooks().then((value) {
       setState(() {
-        widget.books = value;
+        widget.bookNotifier.value = value;
       });
     });
     super.initState();
@@ -32,12 +32,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return MaterialApp(
         home: Scaffold(
             body: Column(children: [
-      Toolbar(),
+      Toolbar(bookNotifier: widget.bookNotifier),
       BookTable(
-        bookDAO: widget.bookDAO,
-        ref: ref,
-        allBooks: widget.books,
-      ),
+          bookDAO: widget.bookDAO, ref: ref, bookNotifier: widget.bookNotifier),
     ])
             //   home: Scaffold(
             // body: BookList(bookDAO: widget.bookDAO)
@@ -48,12 +45,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 class BookTable extends StatefulWidget {
   final BookDAO bookDAO;
   final WidgetRef ref;
-  final List<Book> allBooks;
+  final bookNotifier;
   BookTable(
       {super.key,
       required this.bookDAO,
       required this.ref,
-      required this.allBooks});
+      required this.bookNotifier});
 
   @override
   State<BookTable> createState() => _BookTableState();
@@ -71,15 +68,20 @@ class _BookTableState extends State<BookTable> {
     // TODO: try filtering with database query instead
     String searchText = widget.ref.watch(searchTextStateProvider);
     if (searchText.isNotEmpty) {
-      books = widget.allBooks
+      books = widget.bookNotifier.value
           .where((book) => book.title.contains(searchText))
           .toList();
     } else {
-      books = widget.allBooks;
+      books = widget.bookNotifier.value;
     }
 
+    print(widget.bookNotifier.hashCode);
+
     return Expanded(
-        child: DataTable2(
+        child: ValueListenableBuilder<List<Book>>(
+      valueListenable: widget.bookNotifier,
+      builder: (context, value, child) {
+        return DataTable2(
             sortColumnIndex: sortColumnIndex,
             sortAscending: isAscending,
             columns: [
@@ -92,12 +94,14 @@ class _BookTableState extends State<BookTable> {
                 onSort: sortColumn,
               )
             ],
-            rows: List<DataRow>.generate(books.length, (index) {
+            rows: List<DataRow>.generate(value.length, (index) {
               return DataRow(cells: [
-                DataCell(Text(books[index].title)),
-                DataCell(Text(books[index].authorName)),
+                DataCell(Text(value[index].title)),
+                DataCell(Text(value[index].authorName)),
               ]);
-            })));
+            }));
+      },
+    ));
   }
 
 // Logic for sorting each column

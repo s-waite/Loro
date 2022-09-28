@@ -3,7 +3,7 @@ import 'package:floor/floor.dart';
 @entity
 class Book {
   @PrimaryKey(autoGenerate: true)
-  int id = 0;
+  int? id;
   final String title;
   final String authorName;
   final String path;

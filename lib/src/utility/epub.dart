@@ -10,16 +10,20 @@ import 'package:loro/src/entity/book.dart';
 import 'package:mime/mime.dart';
 import 'package:archive/archive_io.dart';
 import 'package:loro/src/database/database.dart';
+import 'package:riverpod/riverpod.dart';
 
 //TODO: create new posix filename and artist folder, copy file to folder with new name,
 //ensure book hasnt already been added
 // Add book info to database
 // database column for relative path
 // books folder path saved somewhere
+// TODO: could store list of books in global riverpod that everything listens to 
 String logSource = 'epub.dart';
 
 class Epub {
-  static void loadEpub(File epub) async {
+
+
+  static void loadEpub(File epub,ValueNotifier<List<Book>> bookNotifier) async {
     var bytes = await epub.readAsBytes();
     EpubBook epubBook = await EpubReader.readBook(bytes);
     String title = epubBook.Title.toString();
@@ -34,7 +38,9 @@ class Epub {
           await $FloorAppDatabase.databaseBuilder('app_database.db').build();
       BookDAO bookDAO = database.bookDao;
 
-bookDAO.insertBook(Book(title: title, authorName: author, path: path));
+      bookDAO.insertBook(Book(title: title, authorName: author, path: path));
+      print(bookNotifier.hashCode);
+      bookNotifier.value = await bookDAO.getAllBooks();
     });
   }
 
@@ -55,15 +61,15 @@ bookDAO.insertBook(Book(title: title, authorName: author, path: path));
 
     // Create loro library folder
     if (!await libraryDir.exists()) {
-      await libraryDir.create().whenComplete(() async {
-        if (!await authorDir.exists()) {
-          await authorDir.create();
-          developer.log('Creating authorDirdir ${authorDir.path}',
-              name: logSource);
-        }
-      });
+      libraryDir.createSync();
       developer.log('Creating library dir ${libraryDir.path}', name: logSource);
     }
-    return authorDir;
-  }
+
+    if (!await authorDir.exists()) {
+        return authorDir.create();
+      } else {
+        return authorDir;
+      }
+    }
 }
+

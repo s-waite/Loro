@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:loro/src/utility/epub.dart';
+import 'package:loro/src/entity/book.dart';
 import 'dart:io';
 
 final searchTextStateProvider = StateProvider<String>((ref) {
@@ -13,7 +14,8 @@ final searchTextStateProvider = StateProvider<String>((ref) {
 });
 
 class Toolbar extends StatefulWidget {
-  const Toolbar({super.key});
+  final  ValueNotifier<List<Book>> bookNotifier;
+  const Toolbar({required this.bookNotifier, super.key});
 
   @override
   State<Toolbar> createState() => _ToolbarState();
@@ -30,7 +32,7 @@ class _ToolbarState extends State<Toolbar> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
-              children: [Leading(), Trailing()],
+              children: [Leading(), Trailing(bookNotifier: widget.bookNotifier,)],
             )));
   }
 }
@@ -50,7 +52,8 @@ class _LeadingState extends State<Leading> {
 }
 
 class Trailing extends StatefulWidget {
-  const Trailing({super.key});
+  final  ValueNotifier<List<Book>> bookNotifier;
+  const Trailing({required this.bookNotifier, super.key});
 
   @override
   State<Trailing> createState() => _TrailingState();
@@ -60,7 +63,7 @@ class _TrailingState extends State<Trailing> {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: [AddBookButton(), SearchField()],
+      children: [AddBookButton(bookNotifier: widget.bookNotifier), SearchField()],
       crossAxisAlignment: CrossAxisAlignment.center,
     );
   }
@@ -91,7 +94,9 @@ class _SearchFieldState extends ConsumerState<SearchField> {
 }
 
 class AddBookButton extends StatefulWidget {
-  const AddBookButton({super.key});
+  final  ValueNotifier<List<Book>> bookNotifier;
+  const AddBookButton({required this.bookNotifier, super.key});
+
 
   @override
   State<AddBookButton> createState() => _AddBookButtonState();
@@ -105,7 +110,7 @@ class _AddBookButtonState extends State<AddBookButton> {
           FilePickerResult? result = await FilePicker.platform.pickFiles();
           if (result != null) {
             File file = File(result.files.single.path.toString());
-            Epub.loadEpub(file);
+            Epub.loadEpub(file, widget.bookNotifier);
           } else {}
         },
         icon: Icon(Icons.add));
