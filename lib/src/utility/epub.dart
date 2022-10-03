@@ -20,6 +20,7 @@ String logSource = 'epub.dart';
 /// As an inherited widget, any widget that is a child of Epub can acess the bookNotifier;
 class Epub extends InheritedWidget {
   final ValueNotifier<List<Book>> bookNotifier;
+  // TODO: this doesnt need to be a value notifier
   final ValueNotifier<List<Book>> selectedBooksNotifier;
   final ValueNotifier<Book> activeBook;
 

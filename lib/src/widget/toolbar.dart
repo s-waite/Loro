@@ -64,7 +64,7 @@ class _TrailingState extends State<Trailing> {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: [AddBookButton(), SearchField()],
+      children: [DeleteButton(), AddBookButton(), SearchField()],
       crossAxisAlignment: CrossAxisAlignment.center,
     );
   }
@@ -121,10 +121,50 @@ class _AddBookButtonState extends State<AddBookButton> {
             if (result != null) {
               File file = File(result.files.single.path.toString());
               print(file.path);
-              Epub.loadEpub(file, Epub.of(context).bookNotifier, AppDb.of(context).db);
+              Epub.loadEpub(
+                  file, Epub.of(context).bookNotifier, AppDb.of(context).db);
             } else {}
           });
         },
         icon: Icon(Icons.add));
+  }
+}
+
+class DeleteButton extends StatefulWidget {
+  const DeleteButton({super.key});
+
+  @override
+  State<DeleteButton> createState() => _DeleteButtonState();
+}
+
+class _DeleteButtonState extends State<DeleteButton> {
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+        onPressed: () {
+          List<Book> updatedBooks = [];
+          List<Book> books = Epub.of(context).bookNotifier.value;
+          List<Book> selectedBooks =
+              Epub.of(context).selectedBooksNotifier.value;
+          BookDAO bookDAO = AppDb.of(context).db.bookDao;
+
+          for (Book bookInAll in books) {
+            for (Book bookInSelected in selectedBooks) {
+              if (bookInAll.id == bookInSelected.id) {
+                // Delete the book from the db
+                bookDAO.deleteBook(bookInAll);
+
+// remove  value from bookNotifier
+              } else {
+                updatedBooks.add(bookInAll);
+              }
+            }
+          }
+
+// reset selected books notifier
+          Epub.of(context).bookNotifier.value = updatedBooks;
+          Epub.of(context).selectedBooksNotifier.value = [];
+        },
+        icon: Icon(Icons.delete));
   }
 }

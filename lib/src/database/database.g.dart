@@ -114,6 +114,18 @@ class _$BookDAO extends BookDAO {
                   'bookDirPath': item.bookDirPath,
                   'coverPath': item.coverPath,
                   'description': item.description
+                }),
+        _bookDeletionAdapter = DeletionAdapter(
+            database,
+            'Book',
+            ['id'],
+            (Book item) => <String, Object?>{
+                  'id': item.id,
+                  'title': item.title,
+                  'authorName': item.authorName,
+                  'bookDirPath': item.bookDirPath,
+                  'coverPath': item.coverPath,
+                  'description': item.description
                 });
 
   final sqflite.DatabaseExecutor database;
@@ -124,10 +136,13 @@ class _$BookDAO extends BookDAO {
 
   final InsertionAdapter<Book> _bookInsertionAdapter;
 
+  final DeletionAdapter<Book> _bookDeletionAdapter;
+
   @override
   Future<List<Book>> getAllBooks() async {
     return _queryAdapter.queryList('SELECT * FROM Book',
         mapper: (Map<String, Object?> row) => Book(
+            id: row['id'] as int?,
             title: row['title'] as String,
             authorName: row['authorName'] as String,
             bookDirPath: row['bookDirPath'] as String,
@@ -139,6 +154,7 @@ class _$BookDAO extends BookDAO {
   Future<Book?> findBookById(int id) async {
     return _queryAdapter.query('SELECT * FROM Book WHERE id = ?1',
         mapper: (Map<String, Object?> row) => Book(
+            id: row['id'] as int?,
             title: row['title'] as String,
             authorName: row['authorName'] as String,
             bookDirPath: row['bookDirPath'] as String,
@@ -151,6 +167,7 @@ class _$BookDAO extends BookDAO {
   Future<List<Book>> findBooksByTitle(String searchText) async {
     return _queryAdapter.queryList('SELECT * FROM Book WERE title LIKE ?1',
         mapper: (Map<String, Object?> row) => Book(
+            id: row['id'] as int?,
             title: row['title'] as String,
             authorName: row['authorName'] as String,
             bookDirPath: row['bookDirPath'] as String,
@@ -162,5 +179,10 @@ class _$BookDAO extends BookDAO {
   @override
   Future<void> insertBook(Book book) async {
     await _bookInsertionAdapter.insert(book, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<void> deleteBook(Book book) async {
+    await _bookDeletionAdapter.delete(book);
   }
 }
