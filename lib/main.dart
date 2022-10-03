@@ -15,10 +15,17 @@ final myProvider = Provider((ref) {
 Future<void> main() async {
   debugPaintSizeEnabled = false;
   WidgetsFlutterBinding.ensureInitialized();
+
+  $FloorAppDatabase.databaseBuilder('app_database.db').build().then((db) {
+    runApp(ProviderScope(
+        child: AppDb(
+            db: db,
+            child: MaterialApp(
+                home: Scaffold(
+              body: HomeScreen(),
+            )))));
+  });
   // maybe pass database to constructor of main page?
-  final database =
-      await $FloorAppDatabase.databaseBuilder('app_database.db').build();
-  final bookDao = database.bookDao;
   // for (var i = 1; i < 10000; i++) {
   //   String title =
   //       nouns[Random().nextInt(1000)] + " " + nouns[Random().nextInt(1000)];
@@ -26,10 +33,19 @@ Future<void> main() async {
   //       nouns[Random().nextInt(1000)] + " " + nouns[Random().nextInt(1000)];
   //   await bookDao.insertBook(Book(i, title, author, 1234567890));
   // }
+}
 
-  runApp(ProviderScope(
-      child: MaterialApp(
-          home: Scaffold(
-    body: HomeScreen(bookDAO: bookDao),
-  ))));
+class AppDb extends InheritedWidget {
+  final AppDatabase db;
+
+  const AppDb({super.key, required super.child, required this.db});
+
+  @override
+  bool updateShouldNotify(AppDb oldWidget) => db != oldWidget.db;
+
+  static AppDb of(BuildContext context) {
+    final AppDb? result = context.dependOnInheritedWidgetOfExactType<AppDb>();
+    assert(result != null, 'No Epub found in context');
+    return result!;
+  }
 }

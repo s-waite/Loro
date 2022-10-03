@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:loro/main.dart';
+import 'package:loro/src/dao/book_dao.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:loro/src/utility/epub.dart';
 import 'package:loro/src/entity/book.dart';
+import 'package:loro/src/database/database.dart';
 import 'dart:io';
 
 final searchTextStateProvider = StateProvider<String>((ref) {
@@ -14,8 +17,7 @@ final searchTextStateProvider = StateProvider<String>((ref) {
 });
 
 class Toolbar extends StatefulWidget {
-  final  ValueNotifier<List<Book>> bookNotifier;
-  const Toolbar({required this.bookNotifier, super.key});
+  const Toolbar({super.key});
 
   @override
   State<Toolbar> createState() => _ToolbarState();
@@ -32,7 +34,7 @@ class _ToolbarState extends State<Toolbar> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
-              children: [Leading(), Trailing(bookNotifier: widget.bookNotifier,)],
+              children: [Leading(), Trailing()],
             )));
   }
 }
@@ -52,8 +54,7 @@ class _LeadingState extends State<Leading> {
 }
 
 class Trailing extends StatefulWidget {
-  final  ValueNotifier<List<Book>> bookNotifier;
-  const Trailing({required this.bookNotifier, super.key});
+  const Trailing({super.key});
 
   @override
   State<Trailing> createState() => _TrailingState();
@@ -63,7 +64,7 @@ class _TrailingState extends State<Trailing> {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: [AddBookButton(bookNotifier: widget.bookNotifier), SearchField()],
+      children: [AddBookButton(), SearchField()],
       crossAxisAlignment: CrossAxisAlignment.center,
     );
   }
@@ -82,9 +83,20 @@ class _SearchFieldState extends ConsumerState<SearchField> {
     return SizedBox(
         width: 200,
         child: TextField(
-            onSubmitted: (value) {
-              print("On submitted called");
-              ref.read(searchTextStateProvider.notifier).state = value;
+            onSubmitted: (searchText) async {
+              searchText = searchText.toLowerCase();
+              BookDAO bookDAO = AppDb.of(context).db.bookDao;
+              if (searchText.isNotEmpty) {
+                // Get all books from db and filter for searchText;
+                bookDAO.getAllBooks().then((allBooks) {
+                  Epub.of(context).bookNotifier.value = allBooks.where((book) {
+                    return book.title.toLowerCase().contains(searchText);
+                  }).toList();
+                });
+              } else {
+                Epub.of(context).bookNotifier.value =
+                    await bookDAO.getAllBooks();
+              }
             },
             decoration: InputDecoration(
                 border: OutlineInputBorder(),
@@ -94,9 +106,7 @@ class _SearchFieldState extends ConsumerState<SearchField> {
 }
 
 class AddBookButton extends StatefulWidget {
-  final  ValueNotifier<List<Book>> bookNotifier;
-  const AddBookButton({required this.bookNotifier, super.key});
-
+  const AddBookButton({super.key});
 
   @override
   State<AddBookButton> createState() => _AddBookButtonState();
@@ -106,12 +116,14 @@ class _AddBookButtonState extends State<AddBookButton> {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-        onPressed: () async {
-          FilePickerResult? result = await FilePicker.platform.pickFiles();
-          if (result != null) {
-            File file = File(result.files.single.path.toString());
-            Epub.loadEpub(file, widget.bookNotifier);
-          } else {}
+        onPressed: () {
+          FilePicker.platform.pickFiles().then((result) {
+            if (result != null) {
+              File file = File(result.files.single.path.toString());
+              print(file.path);
+              Epub.loadEpub(file, Epub.of(context).bookNotifier, AppDb.of(context).db);
+            } else {}
+          });
         },
         icon: Icon(Icons.add));
   }

@@ -85,7 +85,7 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Book` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `authorName` TEXT NOT NULL, `path` TEXT NOT NULL)');
+            'CREATE TABLE IF NOT EXISTS `Book` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `title` TEXT NOT NULL, `authorName` TEXT NOT NULL, `bookDirPath` TEXT NOT NULL, `coverPath` TEXT NOT NULL, `description` TEXT NOT NULL)');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -111,7 +111,9 @@ class _$BookDAO extends BookDAO {
                   'id': item.id,
                   'title': item.title,
                   'authorName': item.authorName,
-                  'path': item.path
+                  'bookDirPath': item.bookDirPath,
+                  'coverPath': item.coverPath,
+                  'description': item.description
                 });
 
   final sqflite.DatabaseExecutor database;
@@ -128,7 +130,9 @@ class _$BookDAO extends BookDAO {
         mapper: (Map<String, Object?> row) => Book(
             title: row['title'] as String,
             authorName: row['authorName'] as String,
-            path: row['path'] as String));
+            bookDirPath: row['bookDirPath'] as String,
+            coverPath: row['coverPath'] as String,
+            description: row['description'] as String));
   }
 
   @override
@@ -137,8 +141,22 @@ class _$BookDAO extends BookDAO {
         mapper: (Map<String, Object?> row) => Book(
             title: row['title'] as String,
             authorName: row['authorName'] as String,
-            path: row['path'] as String),
+            bookDirPath: row['bookDirPath'] as String,
+            coverPath: row['coverPath'] as String,
+            description: row['description'] as String),
         arguments: [id]);
+  }
+
+  @override
+  Future<List<Book>> findBooksByTitle(String searchText) async {
+    return _queryAdapter.queryList('SELECT * FROM Book WERE title LIKE ?1',
+        mapper: (Map<String, Object?> row) => Book(
+            title: row['title'] as String,
+            authorName: row['authorName'] as String,
+            bookDirPath: row['bookDirPath'] as String,
+            coverPath: row['coverPath'] as String,
+            description: row['description'] as String),
+        arguments: [searchText]);
   }
 
   @override
