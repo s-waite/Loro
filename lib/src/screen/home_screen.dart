@@ -156,11 +156,11 @@ class BookView extends StatelessWidget {
                   children: [
                     ConstrainedBox(
                       constraints:
-                          BoxConstraints(minWidth: 100, maxHeight: 220),
+                          BoxConstraints(minWidth: 100, maxHeight: 320),
                       child: Image.file(File(value.coverPath)),
                     ),
                     SizedBox(height: 20),
-                    Text(value.title),
+                    Text(value.title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),),
                     SizedBox(height: 10),
                     Text(value.authorName),
                     Html(data: value.description)

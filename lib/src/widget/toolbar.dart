@@ -22,6 +22,7 @@ class _ToolbarState extends State<Toolbar> {
   @override
   Widget build(BuildContext context) {
     return Container(
+        padding: EdgeInsets.symmetric(horizontal: 30),
         decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: Colors.black, width: 1))),
         child: SizedBox(
@@ -44,7 +45,8 @@ class Leading extends StatefulWidget {
 class _LeadingState extends State<Leading> {
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Text("Books",
+        style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold));
   }
 }
 
@@ -58,9 +60,10 @@ class Trailing extends StatefulWidget {
 class _TrailingState extends State<Trailing> {
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Wrap(
+      spacing: 20,
       children: [DeleteButton(), AddBookButton(), SearchField()],
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
     );
   }
 }
@@ -89,8 +92,7 @@ class _SearchFieldState extends ConsumerState<SearchField> {
                   }).toList();
                 });
               } else {
-                Loro.of(context).allBooks.value =
-                    await bookDAO.getAllBooks();
+                Loro.of(context).allBooks.value = await bookDAO.getAllBooks();
               }
             },
             decoration: InputDecoration(
@@ -121,6 +123,9 @@ class _AddBookButtonState extends State<AddBookButton> {
             } else {}
           });
         },
+        padding: EdgeInsets.all(1),
+        splashRadius: 26,
+        tooltip: "Add Book",
         icon: Icon(Icons.add));
   }
 }
@@ -136,25 +141,39 @@ class _DeleteButtonState extends State<DeleteButton> {
   @override
   Widget build(BuildContext context) {
     return IconButton(
+        splashRadius: 26,
+        tooltip: "Delete Selected Books",
         onPressed: () async {
-          List<Book> updatedBooks = [];
           List<Book> books = Loro.of(context).allBooks.value;
-          List<Book> selectedBooks =
-              Loro.of(context).selectedBooks;
+          List<Book> selectedBooks = Loro.of(context).selectedBooks;
           BookDAO bookDAO = Loro.of(context).db.bookDao;
 
-          selectedBooks.forEach((element) {
-              int selectedId = element.id!;
-              for (Book b in books) {
-                  if (b.id == selectedId) {
-                      bookDAO.deleteBookById(b.id!);
-                      if (Loro.of(context).activeBook.value.id == b.id) {
-                         Loro.of(context).activeBook.value = Book(title: "", authorName: "", bookDirPath: "", coverPath: "", description: ""); 
-                        }
-                      // TODO delete book from filesystem and clear book view if book is one being examined
-                    }
+          for (var element in selectedBooks) {
+            int selectedId = element.id!;
+            for (Book b in books) {
+              if (b.id == selectedId) {
+                // Delete book dir
+                Directory(b.bookDirPath).deleteSync(recursive: true);
+
+                // Delete author dir if empty
+                var parentDir = Directory(b.bookDirPath).parent;
+                if (parentDir.listSync(recursive: true).isEmpty) {
+                    parentDir.delete();
+                  }
+
+                bookDAO.deleteBookById(b.id!);
+                if (Loro.of(context).activeBook.value.id == b.id) {
+                  Loro.of(context).activeBook.value = Book(
+                      title: "",
+                      authorName: "",
+                      bookDirPath: "",
+                      coverPath: "",
+                      description: "");
                 }
-            });
+                // TODO delete book from filesystem and clear book view if book is one being examined
+              }
+            }
+          }
 
 // reset selected books notifier
           Loro.of(context).allBooks.value = await bookDAO.getAllBooks();
