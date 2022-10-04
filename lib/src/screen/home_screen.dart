@@ -10,66 +10,41 @@ import 'package:loro/src/utility/epub.dart';
 import 'package:loro/src/widget/toolbar.dart';
 import 'dart:io';
 
-class HomeScreen extends ConsumerStatefulWidget {
-  ValueNotifier<List<Book>> bookNotifier = ValueNotifier<List<Book>>([]);
-  ValueNotifier<Book> activeBook = ValueNotifier<Book>(Book(
-      title: "",
-      authorName: "",
-      bookDirPath: "",
-      coverPath: "",
-      description: ""));
-  ValueNotifier<List<Book>> selectedBooksNotifier = ValueNotifier<List<Book>>([]);
-
+class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
-    AppDb.of(context).db.bookDao.getAllBooks().then((value) {
-      widget.bookNotifier.value = value;
+    var loro = Loro.of(context);
+    loro.db.bookDao.getAllBooks().then((value) {
+      loro.allBooks.value = value;
       print("getting all books in home screen (should only happen 1nce)");
     });
 
     print("building main");
-    return MaterialApp(
-        home: Scaffold(
-            body: Epub(
-                selectedBooksNotifier: widget.selectedBooksNotifier,
-                bookNotifier: widget.bookNotifier,
-                activeBook: widget.activeBook,
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  Toolbar(),
-                  Expanded(
-                      child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      BookTable(ref: ref),
-                      Container(
-                        width: 1,
-                        color: Colors.black,
-                      ),
-                      BookView(),
-                    ],
-                  ))
-                  // BookTable(
-                  //   ref: ref,
-                  // ),
-                ]))
-            //   home: Scaffold(
-            // body: BookList(bookDAO: widget.bookDAO)
-            ));
+    return Column(mainAxisSize: MainAxisSize.min, children: [
+      Toolbar(),
+      Expanded(
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+        BookTable(),
+        Container(
+          width: 1,
+          color: Colors.black,
+        ),
+        BookView(),
+      ]))
+    ]);
   }
 }
 
 class BookTable extends StatefulWidget {
-  final WidgetRef ref;
   BookTable({
     super.key,
-    required this.ref,
   });
 
   @override
@@ -84,30 +59,19 @@ class _BookTableState extends State<BookTable> {
 
   @override
   Widget build(BuildContext context) {
-    books = Epub.of(context).bookNotifier.value.toList();
-    // Search filtering logic
-    // Widget will be rebuilt when search text changes
-    // TODO: try filtering with database query instead
-    // TODO: add inherited widget so we dont have to pass the bookNotifier all around (or try riverpod)
-    String searchText = widget.ref.watch(searchTextStateProvider);
-    if (searchText.isNotEmpty) {
-      Epub.of(context)
-          .bookNotifier
-          .value
-          .retainWhere((book) => book.title.contains(searchText));
-    } else {
-      Epub.of(context).bookNotifier.value = books;
-    }
-
+    
     return Expanded(
         child: ValueListenableBuilder<List<Book>>(
-      valueListenable: Epub.of(context).bookNotifier,
+      valueListenable: Loro.of(context).allBooks,
       builder: (context, value, child) {
+        if (value.isEmpty) {
+            return Center(child: Text("Please Add Some Books"));
+          }
         return DataTable2(
             sortColumnIndex: sortColumnIndex,
             sortAscending: isAscending,
             columns: [
-              DataColumn(
+              DataColumn2(
                 label: Text("Title"),
                 onSort: sortColumn,
               ),
@@ -119,13 +83,15 @@ class _BookTableState extends State<BookTable> {
             rows: List<DataRow2>.generate(value.length, (index) {
               final book = value[index];
               return DataRow2(
-                  selected: Epub.of(context).selectedBooksNotifier.value.contains(book),
+                  selected: Loro.of(context).selectedBooks.contains(book),
                   onSelectChanged: (isSelected) => setState(() {
-                                      final isAdding = isSelected != null && isSelected;
-                                      isAdding ? Epub.of(context).selectedBooksNotifier.value.add(book) : Epub.of(context).selectedBooksNotifier.value.remove(book);
-                                    }),
+                        final isAdding = isSelected != null && isSelected;
+                        isAdding
+                            ? Loro.of(context).selectedBooks.add(book)
+                            : Loro.of(context).selectedBooks.remove(book);
+                      }),
                   onTap: () {
-                    Epub.of(context).activeBook.value = book;
+                    Loro.of(context).activeBook.value = book;
                   },
                   cells: [
                     DataCell(Text(book.title)),
@@ -138,13 +104,16 @@ class _BookTableState extends State<BookTable> {
 
 // Logic for sorting each column
   void sortColumn(int columnIndex, bool ascending) {
+    var books = Loro.of(context).allBooks.value.toList();
     switch (columnIndex) {
       // Title
       case 0:
         if (ascending) {
           books.sort((a, b) => a.title.compareTo(b.title));
+          Loro.of(context).allBooks.value = books;
         } else {
           books.sort((a, b) => b.title.compareTo(a.title));
+          Loro.of(context).allBooks.value = books;
         }
         break;
 
@@ -152,8 +121,10 @@ class _BookTableState extends State<BookTable> {
       case 1:
         if (ascending) {
           books.sort((a, b) => a.authorName.compareTo(b.authorName));
+          Loro.of(context).allBooks.value = books;
         } else {
           books.sort((a, b) => b.authorName.compareTo(a.authorName));
+          Loro.of(context).allBooks.value = books;
         }
         break;
     }
@@ -173,8 +144,12 @@ class BookView extends StatelessWidget {
         width: 350,
         margin: EdgeInsets.all(30),
         child: ValueListenableBuilder<Book>(
-            valueListenable: Epub.of(context).activeBook,
+            valueListenable: Loro.of(context).activeBook,
             builder: (context, value, child) {
+              // If there is no book selected, return a placeholder
+              if (value.id == null) {
+                  return Container();
+                }
               return SingleChildScrollView(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -182,9 +157,7 @@ class BookView extends StatelessWidget {
                     ConstrainedBox(
                       constraints:
                           BoxConstraints(minWidth: 100, maxHeight: 220),
-                      child: Image.file(
-                        File(value.coverPath),
-                      ),
+                      child: Image.file(File(value.coverPath)),
                     ),
                     SizedBox(height: 20),
                     Text(value.title),

@@ -1,6 +1,8 @@
 import 'dart:math';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:window_size/window_size.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'src/screen/home_screen.dart';
 import 'package:loro/src/database/database.dart';
@@ -16,14 +18,30 @@ Future<void> main() async {
   debugPaintSizeEnabled = false;
   WidgetsFlutterBinding.ensureInitialized();
 
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    setWindowTitle('Loro');
+    setWindowMinSize(const Size(600, 300));
+    setWindowMaxSize(Size.infinite);
+  }
+
+  ValueNotifier<List<Book>> allBooks = ValueNotifier<List<Book>>([]);
+  List<Book> selectedBooks = [];
+  ValueNotifier<Book> activeBook = ValueNotifier<Book>(Book(
+      title: "",
+      authorName: "",
+      bookDirPath: "",
+      coverPath: "",
+      description: ""));
+
   $FloorAppDatabase.databaseBuilder('app_database.db').build().then((db) {
-    runApp(ProviderScope(
-        child: AppDb(
-            db: db,
-            child: MaterialApp(
-                home: Scaffold(
-              body: HomeScreen(),
-            )))));
+    runApp(MaterialApp(
+        home: Scaffold(
+            body: Loro(
+                child: HomeScreen(),
+                db: db,
+                allBooks: allBooks,
+                selectedBooks: selectedBooks,
+                activeBook: activeBook))));
   });
   // maybe pass database to constructor of main page?
   // for (var i = 1; i < 10000; i++) {
@@ -35,16 +53,27 @@ Future<void> main() async {
   // }
 }
 
-class AppDb extends InheritedWidget {
+class Loro extends InheritedWidget {
   final AppDatabase db;
+  final ValueNotifier<List<Book>> allBooks;
+  final List<Book> selectedBooks;
+  final ValueNotifier<Book> activeBook;
 
-  const AppDb({super.key, required super.child, required this.db});
+  const Loro(
+      {super.key,
+      required super.child,
+      required this.db,
+      required this.allBooks,
+      required this.selectedBooks,
+      required this.activeBook});
 
   @override
-  bool updateShouldNotify(AppDb oldWidget) => db != oldWidget.db;
+  bool updateShouldNotify(Loro oldWidget) {
+    return (db != oldWidget.db || selectedBooks != oldWidget.selectedBooks);
+  }
 
-  static AppDb of(BuildContext context) {
-    final AppDb? result = context.dependOnInheritedWidgetOfExactType<AppDb>();
+  static Loro of(BuildContext context) {
+    final Loro? result = context.dependOnInheritedWidgetOfExactType<Loro>();
     assert(result != null, 'No Epub found in context');
     return result!;
   }

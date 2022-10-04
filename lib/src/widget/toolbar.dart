@@ -11,11 +11,6 @@ import 'package:loro/src/entity/book.dart';
 import 'package:loro/src/database/database.dart';
 import 'dart:io';
 
-final searchTextStateProvider = StateProvider<String>((ref) {
-  print("setting hits");
-  return "";
-});
-
 class Toolbar extends StatefulWidget {
   const Toolbar({super.key});
 
@@ -85,16 +80,16 @@ class _SearchFieldState extends ConsumerState<SearchField> {
         child: TextField(
             onSubmitted: (searchText) async {
               searchText = searchText.toLowerCase();
-              BookDAO bookDAO = AppDb.of(context).db.bookDao;
+              BookDAO bookDAO = Loro.of(context).db.bookDao;
               if (searchText.isNotEmpty) {
                 // Get all books from db and filter for searchText;
                 bookDAO.getAllBooks().then((allBooks) {
-                  Epub.of(context).bookNotifier.value = allBooks.where((book) {
+                  Loro.of(context).allBooks.value = allBooks.where((book) {
                     return book.title.toLowerCase().contains(searchText);
                   }).toList();
                 });
               } else {
-                Epub.of(context).bookNotifier.value =
+                Loro.of(context).allBooks.value =
                     await bookDAO.getAllBooks();
               }
             },
@@ -122,7 +117,7 @@ class _AddBookButtonState extends State<AddBookButton> {
               File file = File(result.files.single.path.toString());
               print(file.path);
               Epub.loadEpub(
-                  file, Epub.of(context).bookNotifier, AppDb.of(context).db);
+                  file, Loro.of(context).allBooks, Loro.of(context).db);
             } else {}
           });
         },
@@ -141,29 +136,29 @@ class _DeleteButtonState extends State<DeleteButton> {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-        onPressed: () {
+        onPressed: () async {
           List<Book> updatedBooks = [];
-          List<Book> books = Epub.of(context).bookNotifier.value;
+          List<Book> books = Loro.of(context).allBooks.value;
           List<Book> selectedBooks =
-              Epub.of(context).selectedBooksNotifier.value;
-          BookDAO bookDAO = AppDb.of(context).db.bookDao;
+              Loro.of(context).selectedBooks;
+          BookDAO bookDAO = Loro.of(context).db.bookDao;
 
-          for (Book bookInAll in books) {
-            for (Book bookInSelected in selectedBooks) {
-              if (bookInAll.id == bookInSelected.id) {
-                // Delete the book from the db
-                bookDAO.deleteBook(bookInAll);
-
-// remove  value from bookNotifier
-              } else {
-                updatedBooks.add(bookInAll);
-              }
-            }
-          }
+          selectedBooks.forEach((element) {
+              int selectedId = element.id!;
+              for (Book b in books) {
+                  if (b.id == selectedId) {
+                      bookDAO.deleteBookById(b.id!);
+                      if (Loro.of(context).activeBook.value.id == b.id) {
+                         Loro.of(context).activeBook.value = Book(title: "", authorName: "", bookDirPath: "", coverPath: "", description: ""); 
+                        }
+                      // TODO delete book from filesystem and clear book view if book is one being examined
+                    }
+                }
+            });
 
 // reset selected books notifier
-          Epub.of(context).bookNotifier.value = updatedBooks;
-          Epub.of(context).selectedBooksNotifier.value = [];
+          Loro.of(context).allBooks.value = await bookDAO.getAllBooks();
+          Loro.of(context).selectedBooks.clear();
         },
         icon: Icon(Icons.delete));
   }

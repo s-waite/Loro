@@ -12,8 +12,8 @@ abstract class BookDAO {
   @Query('SELECT * FROM Book WERE title LIKE :searchText')
   Future<List<Book>> findBooksByTitle(String searchText);
 
-  @delete
-  Future<void> deleteBook(Book book);
+  @Query('DELETE FROM Book WHERE id = :id')
+  Future<void> deleteBookById(int id);
 
   @insert
   Future<void> insertBook(Book book);

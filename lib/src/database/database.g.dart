@@ -114,18 +114,6 @@ class _$BookDAO extends BookDAO {
                   'bookDirPath': item.bookDirPath,
                   'coverPath': item.coverPath,
                   'description': item.description
-                }),
-        _bookDeletionAdapter = DeletionAdapter(
-            database,
-            'Book',
-            ['id'],
-            (Book item) => <String, Object?>{
-                  'id': item.id,
-                  'title': item.title,
-                  'authorName': item.authorName,
-                  'bookDirPath': item.bookDirPath,
-                  'coverPath': item.coverPath,
-                  'description': item.description
                 });
 
   final sqflite.DatabaseExecutor database;
@@ -135,8 +123,6 @@ class _$BookDAO extends BookDAO {
   final QueryAdapter _queryAdapter;
 
   final InsertionAdapter<Book> _bookInsertionAdapter;
-
-  final DeletionAdapter<Book> _bookDeletionAdapter;
 
   @override
   Future<List<Book>> getAllBooks() async {
@@ -177,12 +163,13 @@ class _$BookDAO extends BookDAO {
   }
 
   @override
-  Future<void> insertBook(Book book) async {
-    await _bookInsertionAdapter.insert(book, OnConflictStrategy.abort);
+  Future<void> deleteBookById(int id) async {
+    await _queryAdapter
+        .queryNoReturn('DELETE FROM Book WHERE id = ?1', arguments: [id]);
   }
 
   @override
-  Future<void> deleteBook(Book book) async {
-    await _bookDeletionAdapter.delete(book);
+  Future<void> insertBook(Book book) async {
+    await _bookInsertionAdapter.insert(book, OnConflictStrategy.abort);
   }
 }

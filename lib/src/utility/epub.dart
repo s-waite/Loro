@@ -18,29 +18,7 @@ import 'package:archive/archive_io.dart';
 String logSource = 'epub.dart';
 
 /// As an inherited widget, any widget that is a child of Epub can acess the bookNotifier;
-class Epub extends InheritedWidget {
-  final ValueNotifier<List<Book>> bookNotifier;
-  // TODO: this doesnt need to be a value notifier
-  final ValueNotifier<List<Book>> selectedBooksNotifier;
-  final ValueNotifier<Book> activeBook;
-
-  const Epub(
-      {super.key,
-      required this.selectedBooksNotifier,
-      required this.bookNotifier,
-      required super.child,
-      required this.activeBook});
-
-  static Epub of(BuildContext context) {
-    final Epub? result = context.dependOnInheritedWidgetOfExactType<Epub>();
-    assert(result != null, 'No Epub found in context');
-    return result!;
-  }
-
-  @override
-  bool updateShouldNotify(Epub oldWidget) =>
-      bookNotifier != oldWidget.bookNotifier;
-
+class Epub {
   static Future<Map<String, String>> getMetadata(File epub) async {
     Map<String, String> metaData = {};
     var bytes = await epub.readAsBytes();
