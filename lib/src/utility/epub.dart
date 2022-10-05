@@ -1,3 +1,4 @@
+// TODO: use path seperator Platform.pathSeperator instead of hardcoding forward slash
 import 'dart:io';
 import 'dart:developer' as developer;
 
@@ -16,6 +17,7 @@ import 'package:archive/archive_io.dart';
 // books folder path saved somewhere
 // TODO: could store list of books in global riverpod that everything listens to
 String logSource = 'epub.dart';
+String ps = Platform.pathSeparator;
 
 /// As an inherited widget, any widget that is a child of Epub can acess the bookNotifier;
 class Epub {
@@ -54,7 +56,7 @@ class Epub {
 
   static Future<File> copyEpubToDir(
       File epub, Directory bookDir, author, title) {
-    String path = "${bookDir.path}/$author - $title.epub";
+    String path = "${bookDir.path}$ps$author - $title.epub";
     return epub.copy(path);
   }
 
@@ -65,14 +67,14 @@ class Epub {
 
     final archive = ZipDecoder().decodeBuffer(inputFileStream);
     final String firstImageName =
-        epubBook.Content!.Images!.values.first.FileName!.split("/").last;
+        epubBook.Content!.Images!.values.first.FileName!.split(ps).last;
     var firstImage = archive.files
         .where((element) => element.toString().contains(firstImageName))
         .first;
     String imageFiletype = firstImageName.split('.').last;
     firstImage
-        .writeContent(OutputFileStream("${dir.path}/cover.$imageFiletype"));
-    return ("${dir.path}/cover.$imageFiletype");
+        .writeContent(OutputFileStream("${dir.path}${ps}cover.$imageFiletype"));
+    return ("${dir.path}${ps}cover.$imageFiletype");
   }
 
 //
@@ -129,7 +131,7 @@ class Epub {
     String userHome = Platform.environment['HOME'] ??
         Platform.environment['USERPROFILE'] as String;
 
-    String bookPath = '$userHome/$libraryName/$author/$title';
+    String bookPath = '$userHome$ps$libraryName$ps$author$ps$title';
     return Directory(bookPath).create(recursive: true);
   }
 }
