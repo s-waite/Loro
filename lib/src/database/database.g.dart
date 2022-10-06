@@ -63,6 +63,8 @@ class _$AppDatabase extends AppDatabase {
 
   BookDAO? _bookDaoInstance;
 
+  UserDAO? _userDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
@@ -86,6 +88,8 @@ class _$AppDatabase extends AppDatabase {
       onCreate: (database, version) async {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `Book` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `title` TEXT NOT NULL, `authorName` TEXT NOT NULL, `bookDirPath` TEXT NOT NULL, `coverPath` TEXT NOT NULL, `description` TEXT NOT NULL)');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `User` (`username` TEXT NOT NULL, `password` TEXT NOT NULL, PRIMARY KEY (`username`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -96,6 +100,11 @@ class _$AppDatabase extends AppDatabase {
   @override
   BookDAO get bookDao {
     return _bookDaoInstance ??= _$BookDAO(database, changeListener);
+  }
+
+  @override
+  UserDAO get userDao {
+    return _userDaoInstance ??= _$UserDAO(database, changeListener);
   }
 }
 
@@ -171,5 +180,47 @@ class _$BookDAO extends BookDAO {
   @override
   Future<void> insertBook(Book book) async {
     await _bookInsertionAdapter.insert(book, OnConflictStrategy.abort);
+  }
+}
+
+class _$UserDAO extends UserDAO {
+  _$UserDAO(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database),
+        _userInsertionAdapter = InsertionAdapter(
+            database,
+            'User',
+            (User item) => <String, Object?>{
+                  'username': item.username,
+                  'password': item.password
+                });
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<User> _userInsertionAdapter;
+
+  @override
+  Future<User?> findUserByUsername(String username) async {
+    return _queryAdapter.query('SELECT * FROM User WHERE username = ?1',
+        mapper: (Map<String, Object?> row) => User(
+            username: row['username'] as String,
+            password: row['password'] as String),
+        arguments: [username]);
+  }
+
+  @override
+  Future<void> deleteUserByUsername(String username) async {
+    await _queryAdapter.queryNoReturn('DELETE FROM User WHERE username = ?1',
+        arguments: [username]);
+  }
+
+  @override
+  Future<void> insertUser(User user) async {
+    await _userInsertionAdapter.insert(user, OnConflictStrategy.abort);
   }
 }
