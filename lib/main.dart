@@ -38,8 +38,7 @@ Future<void> main() async {
 
   // Run the app after the database is built
   $FloorAppDatabase.databaseBuilder('app_database.db').build().then((db) async {
-    // db.userDao.insertUser(User(username: "sam", password: pw.hashStrAndB64Encode("password", pw.generateSalt())));
-    print(await pw.verifyPasswordHashedSalted("sam", "password2", db));
+    db.userDao.insertUser(User(username: "admin", password: pw.hashStrAndB64Encode("password", pw.generateSalt())));
     runApp(MaterialApp(
       theme: ThemeData(
         // Define the default brightness and colors.
