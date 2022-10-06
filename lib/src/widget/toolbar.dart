@@ -62,43 +62,13 @@ class _TrailingState extends State<Trailing> {
   Widget build(BuildContext context) {
     return Wrap(
       spacing: 20,
-      children: [DeleteButton(), AddBookButton(), SearchField()],
+      children: [
+        DeleteButton(),
+        AddBookButton(),
+        Search(),
+      ],
       crossAxisAlignment: WrapCrossAlignment.center,
     );
-  }
-}
-
-class SearchField extends ConsumerStatefulWidget {
-  const SearchField({super.key});
-
-  @override
-  ConsumerState<SearchField> createState() => _SearchFieldState();
-}
-
-class _SearchFieldState extends ConsumerState<SearchField> {
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-        width: 200,
-        child: TextField(
-            onSubmitted: (searchText) async {
-              searchText = searchText.toLowerCase();
-              BookDAO bookDAO = Loro.of(context).db.bookDao;
-              if (searchText.isNotEmpty) {
-                // Get all books from db and filter for searchText;
-                bookDAO.getAllBooks().then((allBooks) {
-                  Loro.of(context).allBooks.value = allBooks.where((book) {
-                    return book.title.toLowerCase().contains(searchText);
-                  }).toList();
-                });
-              } else {
-                Loro.of(context).allBooks.value = await bookDAO.getAllBooks();
-              }
-            },
-            decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: "Search",
-                prefixIcon: Icon(Icons.search))));
   }
 }
 
@@ -158,8 +128,8 @@ class _DeleteButtonState extends State<DeleteButton> {
                 // Delete author dir if empty
                 var parentDir = Directory(b.bookDirPath).parent;
                 if (parentDir.listSync(recursive: true).isEmpty) {
-                    parentDir.delete();
-                  }
+                  parentDir.delete();
+                }
 
                 bookDAO.deleteBookById(b.id!);
                 if (Loro.of(context).activeBook.value.id == b.id) {
@@ -170,7 +140,6 @@ class _DeleteButtonState extends State<DeleteButton> {
                       coverPath: "",
                       description: "");
                 }
-                // TODO delete book from filesystem and clear book view if book is one being examined
               }
             }
           }
@@ -180,5 +149,72 @@ class _DeleteButtonState extends State<DeleteButton> {
           Loro.of(context).selectedBooks.clear();
         },
         icon: Icon(Icons.delete));
+  }
+}
+
+enum SearchFilter { title, author }
+
+class Search extends StatefulWidget {
+  const Search({super.key});
+
+  @override
+  State<Search> createState() => _SearchState();
+}
+
+class _SearchState extends State<Search> {
+  SearchFilter _searchFilter = SearchFilter.title;
+  @override
+  Widget build(BuildContext context) {
+    return Row(children: [
+      Container(
+          width: 100,
+          child: DropdownButtonHideUnderline(
+              child: DropdownButton(
+                  value: _searchFilter,
+                  items: [
+                    DropdownMenuItem(
+                      child: Text("Title"),
+                      value: SearchFilter.title,
+                    ),
+                    DropdownMenuItem(
+                        child: Text("Author"), value: SearchFilter.author)
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _searchFilter = value!;
+                    });
+                  }))),
+      SizedBox(
+        width: 20,
+      ),
+      SizedBox(
+          width: 200,
+          child: TextField(
+              onSubmitted: (searchText) async {
+                searchText = searchText.toLowerCase();
+                BookDAO bookDAO = Loro.of(context).db.bookDao;
+                if (searchText.isNotEmpty) {
+                  // Get all books from db and filter for searchText;
+                  bookDAO.getAllBooks().then((allBooks) {
+                    Loro.of(context).allBooks.value = allBooks.where((book) {
+                      if (_searchFilter == SearchFilter.title) {
+                        return book.title.toLowerCase().contains(searchText);
+                      } else if (_searchFilter == SearchFilter.author) {
+                        return book.authorName
+                            .toLowerCase()
+                            .contains(searchText);
+                      }
+                      return false;
+                    }).toList();
+                  });
+                } else {
+                  Loro.of(context).allBooks.value = await bookDAO.getAllBooks();
+                }
+              },
+              decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: "Search",
+                  prefixIcon: Icon(Icons.search))))
+    ]);
   }
 }
