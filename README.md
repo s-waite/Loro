@@ -3,8 +3,11 @@
 This user guide includes instructions on how to install and use the ebook management software.
 
 ## Installation
-1. Download the the release for your operating system from [here]{here}
-2. To run the program, double click on the downloaded binary
+1. Extract the file "loro.zip" or download from the github releases page [https://github.com/s-waite/Loro/releases/tag/v1.0](https://github.com/s-waite/Loro/releases/tag/v1.0)
+2. To run the program, double click on the file "loro"
+3. If you recieve the error "loro cannot be opened because MacOS cannot check it for malicious software", control-click the application and select open 
+
+![The control-click menu](./readme_assets/controlclick.png){ width=50% }
 
 ## Using the Application
 There are three main areas in this application. The toolbar:
