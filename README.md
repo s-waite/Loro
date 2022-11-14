@@ -3,7 +3,8 @@
 This user guide includes instructions on how to install and use the ebook management software.
 
 ## Installation
-1. Download the the release for your operating system from [here]{here}. To run the program, double click on the downloaded binary.
+1. Download the the release for your operating system from [here]{here}
+2. To run the program, double click on the downloaded binary
 
 ## Using the Application
 There are three main areas in this application. The toolbar:
