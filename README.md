@@ -43,3 +43,5 @@ To sort the table by either title or author, click the corresponding header in t
 ### Generating a Report
 To generate a report of more detailed information on the books, click the "Generate Report of Books" button in the top toolbar
 
+![Sample Report](./readme_assets/report.png)
+
