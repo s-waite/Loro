@@ -13,11 +13,11 @@ There are three main areas in this application. The toolbar:
 
 The book table:
 
-![The book table](./readme_assets/booktable.png)
+![The book table](./readme_assets/booktable.png){ width=50% }
 
 And the book details:
 
-![The book details](./readme_assets/bookdetails.png)
+![The book details](./readme_assets/bookdetails.png){ width=50% }
 
 ### Logging In
 The default username is "admin" and the default password is "password"
