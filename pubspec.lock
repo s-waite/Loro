@@ -197,6 +197,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.3.7"
+  desktop_window:
+    dependency: "direct main"
+    description:
+      name: desktop_window
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.4.0"
   english_words:
     dependency: "direct main"
     description:

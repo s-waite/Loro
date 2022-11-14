@@ -21,11 +21,11 @@ void main() {
     expect(dir.existsSync(), true);
 
     File bookInLibrary = await Epub.copyEpubToDir(
-        File('test/cole-voyage-of-life.epub'), dir, authorName, bookTitle);
+        File('test/moby-dick.epub'), dir, authorName, bookTitle);
     expect(bookInLibrary.existsSync(), true);
 
-    File coverFile = await Epub.copyCoverToDir(epubFile, dir);
-    expect(coverFile.existsSync(), true);
+    String coverFileLocation = await Epub.copyCoverToDir(epubFile, dir);
+    expect(File(coverFileLocation).existsSync(), true);
     // Directory('$userHome/Loro Library Test').deleteSync(recursive: true);
   });
 

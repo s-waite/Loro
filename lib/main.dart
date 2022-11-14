@@ -1,10 +1,11 @@
 import 'dart:math';
 import 'package:loro/src/entity/user.dart';
 import 'dart:io';
-
+import 'package:desktop_window/desktop_window.dart';
 import 'package:flutter/material.dart';
 import 'package:loro/src/screen/login_screen.dart';
 import 'package:loro/src/screen/login_screen.dart';
+import 'package:loro/src/screen/report.dart';
 import 'package:window_size/window_size.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'src/screen/home_screen.dart';
@@ -21,15 +22,16 @@ Future<void> main() async {
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     setWindowTitle('Loro');
-    setWindowMinSize(const Size(600, 300));
+    setWindowMinSize(const Size(900, 300));
     setWindowMaxSize(Size.infinite);
+    DesktopWindow.setWindowSize(Size(900, 600));
   }
-
-
 
   ValueNotifier<List<Book>> allBooks = ValueNotifier<List<Book>>([]);
   List<Book> selectedBooks = [];
   ValueNotifier<Book> activeBook = ValueNotifier<Book>(Book(
+  sizeInKb: 0,
+  dateAdded: "",
       title: "",
       authorName: "",
       bookDirPath: "",
@@ -38,7 +40,9 @@ Future<void> main() async {
 
   // Run the app after the database is built
   $FloorAppDatabase.databaseBuilder('app_database.db').build().then((db) async {
-    db.userDao.insertUser(User(username: "admin", password: pw.hashStrAndB64Encode("password", pw.generateSalt())));
+    db.userDao.insertUser(User(
+        username: "admin",
+        password: pw.hashStrAndB64Encode("password", pw.generateSalt())));
     runApp(MaterialApp(
       theme: ThemeData(
         // Define the default brightness and colors.
@@ -82,6 +86,17 @@ Future<void> main() async {
           return Scaffold(
               body: Loro(
             child: HomeScreen(),
+            db: db,
+            allBooks: allBooks,
+            selectedBooks: selectedBooks,
+            activeBook: activeBook,
+          ));
+        },
+        '/report': (context) {
+          return Scaffold(
+              body: Loro(
+            // child: HomeScreen(),
+            child: ReportScreen(),
             db: db,
             allBooks: allBooks,
             selectedBooks: selectedBooks,

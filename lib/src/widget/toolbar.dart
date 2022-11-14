@@ -4,6 +4,7 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loro/main.dart';
 import 'package:loro/src/dao/book_dao.dart';
+import 'package:loro/src/screen/report.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:loro/src/utility/epub.dart';
@@ -63,12 +64,31 @@ class _TrailingState extends State<Trailing> {
     return Wrap(
       spacing: 20,
       children: [
+        ReportButton(),
         DeleteButton(),
         AddBookButton(),
         Search(),
       ],
       crossAxisAlignment: WrapCrossAlignment.center,
     );
+  }
+}
+
+class ReportButton extends StatefulWidget {
+  const ReportButton({super.key});
+
+  @override
+  State<ReportButton> createState() => _ReportButtonState();
+}
+
+class _ReportButtonState extends State<ReportButton> {
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+        onPressed: () {
+          Navigator.pushNamed(context, "/report");
+        },
+        child: Text("Generate Report of Books"));
   }
 }
 
@@ -134,6 +154,8 @@ class _DeleteButtonState extends State<DeleteButton> {
                 bookDAO.deleteBookById(b.id!);
                 if (Loro.of(context).activeBook.value.id == b.id) {
                   Loro.of(context).activeBook.value = Book(
+                  dateAdded: "",
+                  sizeInKb: 0,
                       title: "",
                       authorName: "",
                       bookDirPath: "",

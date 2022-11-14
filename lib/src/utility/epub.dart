@@ -16,7 +16,6 @@ import 'package:archive/archive_io.dart';
 String logSource = 'epub.dart';
 String ps = Platform.pathSeparator;
 
-/// As an inherited widget, any widget that is a child of Epub can acess the bookNotifier;
 class Epub {
   Epub._();
 
@@ -44,12 +43,16 @@ class Epub {
     Directory bookDir = await createBookDir(author, title, "Loro Library");
     File bookInLibFile = await copyEpubToDir(epub, bookDir, author, title);
     String picPath = await copyCoverToDir(epub, bookDir);
+    String dateAdded = DateTime.now().toString();
+    int sizeInKb = bookInLibFile.lengthSync();
     db.bookDao.insertBook(Book(
         title: title,
         authorName: author,
         bookDirPath: bookDir.path,
         coverPath: picPath,
-        description: description));
+        description: description,
+        dateAdded: dateAdded,
+        sizeInKb: sizeInKb));
     bookNotifier.value = await db.bookDao.getAllBooks();
   }
 

@@ -87,7 +87,7 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Book` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `title` TEXT NOT NULL, `authorName` TEXT NOT NULL, `bookDirPath` TEXT NOT NULL, `coverPath` TEXT NOT NULL, `description` TEXT NOT NULL)');
+            'CREATE TABLE IF NOT EXISTS `Book` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `title` TEXT NOT NULL, `authorName` TEXT NOT NULL, `bookDirPath` TEXT NOT NULL, `coverPath` TEXT NOT NULL, `description` TEXT NOT NULL, `dateAdded` TEXT NOT NULL, `sizeInKb` INTEGER NOT NULL)');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `User` (`username` TEXT NOT NULL, `password` TEXT NOT NULL, PRIMARY KEY (`username`))');
 
@@ -122,7 +122,9 @@ class _$BookDAO extends BookDAO {
                   'authorName': item.authorName,
                   'bookDirPath': item.bookDirPath,
                   'coverPath': item.coverPath,
-                  'description': item.description
+                  'description': item.description,
+                  'dateAdded': item.dateAdded,
+                  'sizeInKb': item.sizeInKb
                 });
 
   final sqflite.DatabaseExecutor database;
@@ -142,7 +144,9 @@ class _$BookDAO extends BookDAO {
             authorName: row['authorName'] as String,
             bookDirPath: row['bookDirPath'] as String,
             coverPath: row['coverPath'] as String,
-            description: row['description'] as String));
+            description: row['description'] as String,
+            dateAdded: row['dateAdded'] as String,
+            sizeInKb: row['sizeInKb'] as int));
   }
 
   @override
@@ -154,7 +158,9 @@ class _$BookDAO extends BookDAO {
             authorName: row['authorName'] as String,
             bookDirPath: row['bookDirPath'] as String,
             coverPath: row['coverPath'] as String,
-            description: row['description'] as String),
+            description: row['description'] as String,
+            dateAdded: row['dateAdded'] as String,
+            sizeInKb: row['sizeInKb'] as int),
         arguments: [id]);
   }
 
@@ -167,7 +173,9 @@ class _$BookDAO extends BookDAO {
             authorName: row['authorName'] as String,
             bookDirPath: row['bookDirPath'] as String,
             coverPath: row['coverPath'] as String,
-            description: row['description'] as String),
+            description: row['description'] as String,
+            dateAdded: row['dateAdded'] as String,
+            sizeInKb: row['sizeInKb'] as int),
         arguments: [searchText]);
   }
 
